@@ -17,6 +17,7 @@ def dir_exist(dir_path):
 def extract_audio(path, out_path, sample_rate=16000):
     print(f'[INFO] ===== extract audio from {path} to {out_path} =====')
     if file_exist(out_path):
+        # TODO 判断是否所有的都解析完了
         print(f"[INFO]{out_path} exists. Skip!")
         return
 
@@ -39,6 +40,7 @@ def extract_audio_features(path, mode='wav2vec'):
 def extract_images(path, out_path, fps=25):
     print(f'[INFO] ===== extract images from {path} to {out_path} =====')
     if dir_exist(out_path):
+        # TODO 判断是否所有的都解析完了
         print(f"[INFO]{out_path} exists. Skip!")
         return
 
@@ -50,6 +52,7 @@ def extract_images(path, out_path, fps=25):
 def extract_semantics(ori_imgs_dir, parsing_dir):
     print(f'[INFO] ===== extract semantics from {ori_imgs_dir} to {parsing_dir} =====')
     if dir_exist(parsing_dir):
+        # TODO 判断是否所有的都解析完了
         print(f"[INFO]{parsing_dir} exists. Skip!")
         return
 
@@ -60,6 +63,11 @@ def extract_semantics(ori_imgs_dir, parsing_dir):
 
 def extract_landmarks(ori_imgs_dir):
     print(f'[INFO] ===== extract face landmarks from {ori_imgs_dir} =====')
+
+    if dir_exist(ori_imgs_dir) and file_exist(os.path.join(ori_imgs_dir, '0.lms')):
+        # TODO 判断是否所有的都解析完了
+        print(f"[INFO]{ori_imgs_dir} exists. Skip!")
+        return
 
     import face_alignment
     try:
