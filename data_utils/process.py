@@ -81,7 +81,7 @@ def extract_landmarks(ori_imgs_dir):
 def extract_background(base_dir, ori_imgs_dir, background_file='bc.jpg'):
     print(f'[INFO] ===== extract background image from {ori_imgs_dir} =====')
 
-    if file_exist(background_file):
+    if file_exist(os.path.join(base_dir, background_file)):
         print(f"[INFO]{background_file} exists. Skip!")
         return
 
@@ -140,6 +140,11 @@ def extract_background(base_dir, ori_imgs_dir, background_file='bc.jpg'):
 
 def extract_torso_and_gt(base_dir, ori_imgs_dir):
     print(f'[INFO] ===== extract torso and gt images for {base_dir} =====')
+
+    if dir_exist(os.path.join(base_dir, 'gt_imgs')) and dir_exist(os.path.join(base_dir, 'torso_imgs')):
+        print(f"[INFO]gt_imgs exists. Skip!")
+        print(f"[INFO]torso_imgs exists. Skip!")
+        return
 
     from scipy.ndimage import binary_erosion, binary_dilation
 
@@ -400,6 +405,7 @@ if __name__ == '__main__':
 
     # extract bg
     if opt.task == -1 or opt.task == 5:
+
         extract_background(base_dir, ori_imgs_dir)
 
     # extract torso images and gt_images
