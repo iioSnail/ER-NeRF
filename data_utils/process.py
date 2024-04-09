@@ -78,8 +78,12 @@ def extract_landmarks(ori_imgs_dir):
     print(f'[INFO] ===== extracted face landmarks =====')
 
 
-def extract_background(base_dir, ori_imgs_dir):
+def extract_background(base_dir, ori_imgs_dir, background_file='bc.jpg'):
     print(f'[INFO] ===== extract background image from {ori_imgs_dir} =====')
+
+    if file_exist(background_file):
+        print(f"[INFO]{background_file} exists. Skip!")
+        return
 
     from sklearn.neighbors import NearestNeighbors
 
@@ -129,7 +133,7 @@ def extract_background(base_dir, ori_imgs_dir):
     bg_fg_xys = fg_xys[indices[:, 0]]
     bc_img[bg_xys[:, 0], bg_xys[:, 1], :] = bc_img[bg_fg_xys[:, 0], bg_fg_xys[:, 1], :]
 
-    cv2.imwrite(os.path.join(base_dir, 'bc.jpg'), bc_img)
+    cv2.imwrite(os.path.join(base_dir, background_file), bc_img)
 
     print(f'[INFO] ===== extracted background image =====')
 
