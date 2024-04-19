@@ -123,38 +123,23 @@ class ER_NeRF(object):
 
         criterion = torch.nn.MSELoss(reduction='none')
 
-        if opt.gui:
-            metrics = []  # use no metric in GUI for faster initialization...
-        else:
-            # metrics = [PSNRMeter(), LPIPSMeter(device=device)]
-            metrics = [PSNRMeter(), LPIPSMeter(device=device), LMDMeter(backend='fan')]
+        metrics = [PSNRMeter(), LPIPSMeter(device=device), LMDMeter(backend='fan')]
 
         trainer = Trainer('ngp', opt, model, device=device, workspace=opt.workspace, criterion=criterion, fp16=opt.fp16,
                           metrics=metrics, use_checkpoint=opt.ckpt)
 
-        if opt.test_train:
-            test_set = NeRFDataset(opt, device=device, type='train')
-            # a manual fix to test on the training dataset
-            test_set.training = False
-            test_set.num_rays = -1
-            test_loader = test_set.dataloader()
-        else:
-            test_loader = NeRFDataset(opt, device=device, type='test').dataloader()
+        test_set = NeRFDataset(opt, device=device, type='train')
+        # a manual fix to test on the training dataset
+        test_set.training = False
+        test_set.num_rays = -1
+        test_loader = test_set.dataloader()
 
         # temp fix: for update_extra_states
         model.aud_features = test_loader._data.auds
         model.eye_areas = test_loader._data.eye_area
 
-        if opt.gui:
-            from nerf_triplane.gui import NeRFGUI
-            # we still need test_loader to provide audio features for testing.
-            with NeRFGUI(opt, trainer, test_loader) as gui:
-                gui.render()
+        self.trainer = trainer
+        self.test_loader = test_loader
 
-        else:
-            ### test and save video (fast)
-            trainer.test(test_loader)
-
-            ### evaluate metrics (slow)
-            if test_loader.has_gt:
-                trainer.evaluate(test_loader)
+    def inference(self):
+        self.trainer.test(self.test_loader)
