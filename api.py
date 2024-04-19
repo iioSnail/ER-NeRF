@@ -208,9 +208,12 @@ class ER_NeRF(object):
 
         return test_loader
 
-    def inference(self, audio_filename):
+    def inference(self, audio_filename=None):
         start = time.time()
-        audio_npy = self.audio_extractor.extract(audio_filename)
+        if audio_filename:
+            audio_npy = self.audio_extractor.extract(audio_filename)
+        else:
+            audio_npy = '/root/demo2.npy'
         test_loader = self.gene_test_loader(audio_npy)
 
         filename = str(int(time.time())) + ".mp4"
