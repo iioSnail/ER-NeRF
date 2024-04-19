@@ -121,6 +121,8 @@ class ER_NeRF(object):
                     print(f'[INFO] freeze {k}, {v.shape}')
                     v.requires_grad = False
 
+        criterion = torch.nn.MSELoss(reduction='none')
+
         if opt.gui:
             metrics = []  # use no metric in GUI for faster initialization...
         else:
