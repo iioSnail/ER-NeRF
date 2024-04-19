@@ -146,6 +146,8 @@ class ER_NeRF(object):
         self.model.aud_features = test_loader._data.auds
         self.model.eye_areas = test_loader._data.eye_area
 
+        return test_loader
+
     def inference(self):
         start = time.time()
         test_loader = self.gene_test_loader()
