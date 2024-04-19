@@ -7,6 +7,13 @@ from nerf_triplane.provider import NeRFDataset
 from nerf_triplane.utils import *
 from nerf_triplane.network import NeRFNetwork
 
+import os
+import argparse
+import numpy as np
+import pandas as pd
+from data_utils.deepspeech_features.deepspeech_store import get_deepspeech_model_file
+from data_utils.deepspeech_features.deepspeech_features import conv_audios_to_deepspeech
+
 # torch.autograd.set_detect_anomaly(True)
 # Close tf32 features. Fix low numerical accuracy on rtx30xx gpu.
 try:
@@ -14,6 +21,56 @@ try:
     torch.backends.cudnn.allow_tf32 = False
 except AttributeError as e:
     print('Info. This pytorch version is not support with tf32.')
+
+
+class AudioOption(object):
+
+    def __init__(self):
+        self.deepspeech = '~/.tensorflow/models/deepspeech-0_1_0-b90017e8.pb'
+
+
+class AudioExtractor(object):
+
+    def __init__(self):
+        args = AudioOption()
+
+        deepspeech_pb_path = os.path.expanduser(args.deepspeech)
+        if not os.path.exists(deepspeech_pb_path):
+            deepspeech_pb_path = get_deepspeech_model_file()
+
+        self.deepspeech_pb_path = deepspeech_pb_path
+
+    def extract_features(self,
+                         in_audios,
+                         out_files,
+                         deepspeech_pb_path
+                         ):
+        num_frames_info = [None] * len(in_audios)
+
+        for i, in_audio in enumerate(in_audios):
+            if not out_files[i]:
+                file_stem, _ = os.path.splitext(in_audio)
+                out_files[i] = file_stem + ".npy"
+                # print(out_files[i])
+        conv_audios_to_deepspeech(
+            audios=in_audios,
+            out_files=out_files,
+            num_frames_info=num_frames_info,
+            deepspeech_pb_path=deepspeech_pb_path)
+
+    def extract(self, filename):
+        output = "/root/output/" + str(int(time.time())) + ".npy"
+
+        in_audio = os.path.expanduser(filename)
+        if not os.path.exists(in_audio):
+            raise Exception("Input file/directory doesn't exist: {}".format(in_audio))
+
+        self.extract_features(
+            in_audios=[in_audio],
+            out_files=[output],
+            deepspeech_pb_path=self.deepspeech_pb_path)
+
+        return output
 
 
 class Option(object):
@@ -131,12 +188,15 @@ class ER_NeRF(object):
         trainer = Trainer('ngp', opt, model, device=device, workspace=opt.workspace, criterion=criterion, fp16=opt.fp16,
                           metrics=metrics, use_checkpoint=opt.ckpt)
 
+        self.audio_extractor = AudioExtractor()
+
         self.trainer = trainer
         self.model = model
         self.opt = opt
 
-    def gene_test_loader(self):
+    def gene_test_loader(self, audio_npy):
         # temp fix: for update_extra_states
+        self.opt.aud = audio_npy
         test_set = NeRFDataset(self.opt, device=self.device, type='train')
         # a manual fix to test on the training dataset
         test_set.training = False
@@ -148,9 +208,10 @@ class ER_NeRF(object):
 
         return test_loader
 
-    def inference(self):
+    def inference(self, audio_filename):
         start = time.time()
-        test_loader = self.gene_test_loader()
+        audio_npy = self.audio_extractor.extract(audio_filename)
+        test_loader = self.gene_test_loader(audio_npy)
 
         filename = str(int(time.time())) + ".mp4"
         self.trainer.test(test_loader, save_path=self.save_path, name=filename, inference=True)
