@@ -76,9 +76,9 @@ class AudioExtractor(object):
 class Option(object):
 
     def __init__(self):
-        self.workspace = 'trial_zhf_torso/'
+        self.workspace = 'trial_obama_torso/'
         self.aud = '/root/demo2.npy'
-        self.path = 'data/zhf/'
+        self.path = 'data/obama/'
 
         self.H = 450
         self.O = True
