@@ -96,9 +96,11 @@ class Option(object):
 
 class ER_NeRF(object):
 
-    def __init__(self):
+    def __init__(self, save_path="/root/output/"):
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print("Device:", device)
+
+        self.save_path = save_path
 
         opt = Option()
         model = NeRFNetwork(opt)
@@ -142,4 +144,7 @@ class ER_NeRF(object):
         self.test_loader = test_loader
 
     def inference(self):
-        self.trainer.test(self.test_loader)
+        filename = str(int(time.time())) + ".mp4"
+        self.trainer.test(self.test_loader, save_path=self.save_path, name=filename, inference=True)
+
+        return os.path.join(self.save_path, filename)
