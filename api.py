@@ -98,6 +98,7 @@ class ER_NeRF(object):
 
     def __init__(self, save_path="/root/output/"):
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = device
         print("Device:", device)
 
         self.save_path = save_path
@@ -130,21 +131,27 @@ class ER_NeRF(object):
         trainer = Trainer('ngp', opt, model, device=device, workspace=opt.workspace, criterion=criterion, fp16=opt.fp16,
                           metrics=metrics, use_checkpoint=opt.ckpt)
 
-        test_set = NeRFDataset(opt, device=device, type='train')
+        self.trainer = trainer
+        self.model = model
+        self.opt = opt
+
+    def gene_test_loader(self):
+        # temp fix: for update_extra_states
+        test_set = NeRFDataset(self.opt, device=self.device, type='train')
         # a manual fix to test on the training dataset
         test_set.training = False
         test_set.num_rays = -1
+
         test_loader = test_set.dataloader()
-
-        # temp fix: for update_extra_states
-        model.aud_features = test_loader._data.auds
-        model.eye_areas = test_loader._data.eye_area
-
-        self.trainer = trainer
-        self.test_loader = test_loader
+        self.model.aud_features = test_loader._data.auds
+        self.model.eye_areas = test_loader._data.eye_area
 
     def inference(self):
-        filename = str(int(time.time())) + ".mp4"
-        self.trainer.test(self.test_loader, save_path=self.save_path, name=filename, inference=True)
+        start = time.time()
+        test_loader = self.gene_test_loader()
 
+        filename = str(int(time.time())) + ".mp4"
+        self.trainer.test(test_loader, save_path=self.save_path, name=filename, inference=True)
+
+        print("Duration:", time.time() - start)
         return os.path.join(self.save_path, filename)

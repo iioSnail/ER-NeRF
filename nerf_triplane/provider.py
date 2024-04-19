@@ -12,6 +12,7 @@ import trimesh
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
+import pandas as pd
 
 from .utils import get_audio_features, get_rays, get_bg_coords, convert_poses
 
@@ -420,8 +421,6 @@ class NeRFDataset:
 
             print(f'[INFO] load {self.opt.aud} aud_features: {aud_features.shape}')
 
-        # load action units
-        import pandas as pd
         au_blink_info=pd.read_csv(os.path.join(self.root_path, 'au.csv'))
         au_blink = au_blink_info[' AU45_r'].values
 
