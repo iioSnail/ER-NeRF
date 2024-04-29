@@ -417,4 +417,6 @@ if __name__ == '__main__':
         raise ValueError("DeepSpeech features should not use this code to extract...")
 
     with ASR(opt) as asr:
+        start = time.time()
         asr.run()
+        print("Wav2Vec duration:", (time.time() - start))
