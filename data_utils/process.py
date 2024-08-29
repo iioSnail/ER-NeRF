@@ -18,7 +18,8 @@ def extract_audio_features(path, mode='wav2vec'):
 
     print(f'[INFO] ===== extract audio labels for {path} =====')
     if mode == 'wav2vec':
-        cmd = f'python nerf/asr.py --wav {path} --save_feats'
+        # cmd = f'python nerf/asr.py --wav {path} --save_feats'
+        cmd = f'python data_utils/wav2vec.py --wav {path} --save_feats'
     else: # deepspeech
         cmd = f'python data_utils/deepspeech_features/extract_ds_features.py --input {path}'
     os.system(cmd)
